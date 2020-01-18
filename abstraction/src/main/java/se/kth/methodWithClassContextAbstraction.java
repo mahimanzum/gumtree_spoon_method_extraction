@@ -45,6 +45,46 @@ public class methodWithClassContextAbstraction {
     }
     public static void diff_save(File f1, File f2){
 
+        String whole1= "", st;
+        try (BufferedReader br = new BufferedReader(new FileReader(f1))) {
+            while ((st = br.readLine()) != null)
+                //System.out.println(st);
+                whole1 = whole1 + st + "\n";
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        String whole2= "";
+        try (BufferedReader br = new BufferedReader(new FileReader(f2))) {
+            while ((st = br.readLine()) != null)
+                //System.out.println(st);
+                whole2 = whole2 + st + "\n";
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        Patch patch  = fileDiff(whole1, whole2);
+        //System.out.println(patch);
+        List<Delta> changes = patch.getDeltas();
+        int ct = 0;
+        for (Delta change : changes) {
+            int changeStart=change.getOriginal().getPosition();
+            int changeEnd=changeStart+ change.getOriginal().size();
+
+            int revisedPos = change.getRevised().getPosition();
+            if(generateAbstraction(f1,changeStart, "", false)==2 && generateAbstraction(f2,revisedPos, "", false) == 2){
+                ct++;
+                System.err.println("#################  comes  ###############");
+                new File(f1.getParent().replaceAll("codes", "tufano_data") +"\\").mkdirs();
+                String path1 = f1.getParent().replaceAll("codes", "tufano_data")+"\\change_"+ct+"prev_"+f1.getName();
+                String path2 = f2.getParent().replaceAll("codes", "tufano_data")+"\\change_"+ct+"next_"+f1.getName();
+                generateAbstraction(f1,changeStart,path1 , true);
+                generateAbstraction(f2,revisedPos,path2, true);
+            }
+            //System.out.println(change.getRevised()+", changeStart : "+changeStart+", Original size: "+change.getOriginal().size() +", Revised Size: "+change.getRevised().size()+", Revised Pos: "+revisedPos);
+        }
+
+
     }
     public static void check_diff(){
         //System.out.println("Hello World");
@@ -116,6 +156,7 @@ public class methodWithClassContextAbstraction {
         }
 
     }
+    /*
     public static void walk( String path ) {
         Gson gson = new Gson();
         try {
@@ -156,7 +197,7 @@ public class methodWithClassContextAbstraction {
         } catch (FileNotFoundException e) {
             e.printStackTrace();
         }
-        /*
+
         File root = new File( path );
         File[] list = root.listFiles();
 
@@ -181,9 +222,10 @@ public class methodWithClassContextAbstraction {
                 }
             }
         }
-        */
+
 
     }
+    */
     public static List<File> listf(String directoryName, List<File> files) {
         File directory = new File(directoryName);
 
@@ -221,7 +263,7 @@ public static void main(String[] args) throws FileNotFoundException, IOException
                     temp.add(fl);
                 }
                 else{
-                    //processPathList(temp);
+                    processPathList(temp);
                     for(File fo : temp){
                         System.out.print(fo);
                     }
@@ -237,7 +279,7 @@ public static void main(String[] args) throws FileNotFoundException, IOException
             }
 
         }
-        //processPathList(temp);
+        processPathList(temp);
         System.out.println(f.size());
         //check_diff();
         //walk("E:\\pantho_Tufano_processing\\codes");
@@ -261,7 +303,7 @@ public static void main(String[] args) throws FileNotFoundException, IOException
         System.exit(0);
 }
 
-public static int generateAbstraction(File buggy_file, int buggy_line, File working_dir, String store_path){
+public static int generateAbstraction(File buggy_file, int buggy_line, String store_path, boolean save){
         Launcher launcher = new Launcher();
         launcher.getEnvironment().setAutoImports(true);
         launcher.getEnvironment().setNoClasspath(true);
@@ -326,18 +368,21 @@ public static int generateAbstraction(File buggy_file, int buggy_line, File work
         //System.out.println("comes");
 
         //System.out.println(topLevelmethod);
-        File file = new File(store_path);
-        try{
-            file.createNewFile();
-            PrintStream out = new PrintStream(new FileOutputStream(store_path));
-            System.setOut(out);
-            System.out.println((topLevelmethod));
-            System.err.println("Storing in "+ store_path);
-            return 2;
-        }catch (Exception e) {
-            return 1;
-            //e.printStackTrace();
+        if(save) {
+            File file = new File(store_path);
+            try {
+                file.createNewFile();
+                PrintStream out = new PrintStream(new FileOutputStream(store_path));
+                System.setOut(out);
+                System.out.println((topLevelmethod));
+                System.err.println("Storing in " + store_path);
+                return 2;
+            } catch (Exception e) {
+                return 1;
+                //e.printStackTrace();
+            }
         }
+        return 2;
         /*
         // Remove method body except diff
         List<CtMethod> all_methods = model.getElements(new TypeFilter(CtMethod.class));
