@@ -13,6 +13,7 @@ import difflib.DiffUtils;
 import difflib.Patch;
 
 import java.io.*;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
@@ -42,7 +43,9 @@ public class methodWithClassContextAbstraction {
         return patch;
 
     }
+    public static void diff_save(File f1, File f2){
 
+    }
     public static void check_diff(){
         //System.out.println("Hello World");
         String file1 = "line 1\n" +
@@ -181,9 +184,62 @@ public class methodWithClassContextAbstraction {
         */
 
     }
+    public static List<File> listf(String directoryName, List<File> files) {
+        File directory = new File(directoryName);
+
+        // Get all files from a directory.
+        File[] fList = directory.listFiles();
+        if(fList != null)
+            for (File file : fList) {
+                if (file.isFile()) {
+                    files.add(file);
+                } else if (file.isDirectory()) {
+                    listf(file.getAbsolutePath(), files);
+                }
+            }
+        return files;
+    }
+    public static void processPathList(List<File> files) {
+        for(int i = 0; i<files.size()-1; i++){
+            diff_save(files.get(i), files.get(i+1));
+        }
+    }
+
 public static void main(String[] args) throws FileNotFoundException, IOException {
         System.out.println("COMES");
-        check_diff();
+        List<File>f = Arrays.asList();
+        f = new ArrayList<>(f);
+        f = listf("E:\\pantho_Tufano_processing\\codes", f);
+
+        List<File>temp = Arrays.asList();
+        temp = new ArrayList<>(temp);
+        String pth, prnt="";
+        for(File fl:f){
+            pth = fl.toString();
+            if(pth.substring(pth.length()-4).equals("java")){
+                if(prnt.equals(fl.getParent())){
+                    temp.add(fl);
+                }
+                else{
+                    //processPathList(temp);
+                    for(File fo : temp){
+                        System.out.print(fo);
+                    }
+                    System.out.println("");
+                    temp.clear();
+                    temp.add(fl);
+                    prnt = fl.getParent();
+                }
+                //prnt = fl.getParent();
+                //System.out.println(fl);
+                //System.out.println(prnt);
+
+            }
+
+        }
+        //processPathList(temp);
+        System.out.println(f.size());
+        //check_diff();
         //walk("E:\\pantho_Tufano_processing\\codes");
         /*
         File buggy_file = new File("/home/toufik/Desktop/NeuralCode_experiment/before.java");
